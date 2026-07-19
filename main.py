@@ -1,19 +1,4 @@
-from dataclasses import dataclass
-
-
-@dataclass
-class Study:
-    id: int
-    name: str
-    description: str
-
-
-@dataclass
-class Session:
-    id: int
-    study_id: int
-    note: str
-    uploader: str
+from dataclasses import dataclass, field
 
 
 @dataclass
@@ -22,6 +7,23 @@ class File:
     session_id: int
     name: str
     size: int
+
+
+@dataclass
+class Session:
+    id: int
+    study_id: int
+    note: str
+    uploader: str
+    files: list[File] = field(default_factory=list)
+
+
+@dataclass
+class Study:
+    id: int
+    name: str
+    description: str
+    sessions: list[Session] = field(default_factory=list)
 
 
 study = Study(
@@ -41,7 +43,7 @@ file = File(
     id=1, session_id=session.id, name="Архив 10 мышей ЭЭГ Контроль.zip", size=1024
 )
 
+session.files = [file]
+study.sessions = [session]
 
 print(study)
-print(session)
-print(file)
