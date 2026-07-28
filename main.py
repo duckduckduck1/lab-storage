@@ -2,6 +2,10 @@ from dataclasses import dataclass, field
 from datetime import UTC, datetime
 
 
+def utc_now() -> datetime:
+    return datetime.now(UTC)
+
+
 @dataclass
 class Study:
     id: int
@@ -16,7 +20,7 @@ class Session:
     study_id: int
     note: str
     uploader: str
-    created_at: datetime
+    created_at: datetime = field(default_factory=utc_now)
     files: list = field(default_factory=list)
 
 
@@ -26,7 +30,7 @@ class File:
     session_id: int
     name: str
     size: int
-    created_at: datetime
+    created_at: datetime = field(default_factory=utc_now)
 
 
 study = Study(
@@ -40,7 +44,6 @@ session = Session(
     study_id=study.id,
     note="Контроль ЭЭГ группа 1 Контроль",
     uploader="Sergey Popov",
-    created_at=datetime.now(UTC),
 )
 
 file = File(
@@ -48,7 +51,6 @@ file = File(
     session_id=session.id,
     name="Архив 10 мышей ЭЭГ Контроль.zip",
     size=1024,
-    created_at=datetime.now(UTC),
 )
 
 session_2 = Session(
@@ -56,7 +58,6 @@ session_2 = Session(
     study_id=study.id,
     note="Контроль ЭЭГ группа 2 Контроль",
     uploader="Sergey Popov",
-    created_at=datetime.now(UTC),
 )
 
 study.sessions.append(session)
