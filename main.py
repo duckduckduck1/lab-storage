@@ -11,7 +11,7 @@ class Study:
     id: int
     name: str
     description: str
-    sessions: list = field(default_factory=list)
+    sessions: list[Session] = field(default_factory=list)
 
 
 @dataclass
@@ -21,7 +21,7 @@ class Session:
     note: str
     uploader: str
     created_at: datetime = field(default_factory=utc_now)
-    files: list = field(default_factory=list)
+    files: list[File] = field(default_factory=list)
 
 
 @dataclass
@@ -60,6 +60,14 @@ session_2 = Session(
     uploader="Sergey Popov",
 )
 
+
+def find_session_by_id(study: Study, session_id: int) -> Session | None:
+    for s in study.sessions:
+        if session_id == s.id:
+            return s
+    return None
+
+
 study.sessions.append(session)
 study.sessions.append(session_2)
 session.files.append(file)
@@ -72,3 +80,6 @@ for i, s in enumerate(study.sessions):
         print(
             f"\tID:[{j}] File ID: {f.id}, session_id: {f.session_id}, Name: {f.name}, Size: {f.size}, created_at: {f.created_at}"
         )
+
+print(find_session_by_id(study, 2))
+print(find_session_by_id(study, 999))
