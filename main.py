@@ -1,4 +1,5 @@
-from models import Study, Session, File
+from generator import generate_study
+from models import Study, Session
 
 
 def find_session_by_id(study: Study, session_id: int) -> Session | None:
@@ -9,36 +10,8 @@ def find_session_by_id(study: Study, session_id: int) -> Session | None:
 
 
 def main() -> None:
-    study = Study(
-        id=1,
-        name="Исследование ФБМ при ЧМТ",
-        description="4 группы: контроль, ФБМ 1 день, ФБМ 4 день, ФБМ 7 день",
-    )
 
-    session = Session(
-        id=1,
-        study_id=study.id,
-        note="Контроль ЭЭГ группа 1 Контроль",
-        uploader="Sergey Popov",
-    )
-
-    file = File(
-        id=1,
-        session_id=session.id,
-        name="Архив 10 мышей ЭЭГ Контроль.zip",
-        size=1024,
-    )
-
-    session_2 = Session(
-        id=2,
-        study_id=study.id,
-        note="Контроль ЭЭГ группа 2 Контроль",
-        uploader="Sergey Popov",
-    )
-
-    study.sessions.append(session)
-    study.sessions.append(session_2)
-    session.files.append(file)
+    study = generate_study(1, 2, 2)
 
     for i, s in enumerate(study.sessions):
         print(
