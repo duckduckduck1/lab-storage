@@ -11,7 +11,7 @@ def find_session_by_id(study: Study, session_id: int) -> Session | None:
 
 def main() -> None:
 
-    study = generate_study(1, 2, 2)
+    study = generate_study(1, 2, 2, seed=42)
 
     for i, s in enumerate(study.sessions):
         print(
