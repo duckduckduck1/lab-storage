@@ -6,6 +6,16 @@ from models import Study, Session, File
 def generate_study(
     study_id: int, session_count: int, files_per_session: int, seed: int
 ) -> Study:
+
+    if study_id < 1:
+        raise ValueError("study_id must be greater than 0")
+
+    if session_count < 0:
+        raise ValueError("session_count must be greater than or equal to 0")
+
+    if files_per_session < 0:
+        raise ValueError("files_per_session must be greater than or equal to 0")
+
     rng = Random(seed)
 
     synthetic_study = Study(
