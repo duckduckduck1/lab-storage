@@ -84,3 +84,19 @@ def test_generate_study_allows_zero_files() -> None:
     assert len(study.sessions) == 1
 
     assert study.sessions[0].files == []
+
+
+def test_generate_study_creates_unique_ids() -> None:
+    study = generate_study(1, 4, 3, 42)
+
+    session_ids = [s.id for s in study.sessions]
+
+    file_ids = [f.id for s in study.sessions for f in s.files]
+
+    assert len(session_ids) == 4
+
+    assert len(file_ids) == 12
+
+    assert len(session_ids) == len(set(session_ids))
+
+    assert len(file_ids) == len(set(file_ids))
