@@ -1661,3 +1661,69 @@ SessionORM.files: list[FileORM]      <->  FileORM.session: SessionORM
 - [SQLAlchemy 2.0: ограничения и внешние ключи](https://docs.sqlalchemy.org/en/20/core/constraints.html#defining-foreign-keys)
 - [SQLAlchemy 2.0: identity и серверные значения по умолчанию](https://docs.sqlalchemy.org/en/20/core/defaults.html)
 - [SQLAlchemy 2.0: тип `DateTime`](https://docs.sqlalchemy.org/en/20/core/type_basics.html#sqlalchemy.types.DateTime)
+
+### 2026-09-04 — Полная проверка ORM-метаданных
+
+#### Что я реализовал
+
+- Расширил [`tests/test_orm_models.py`](tests/test_orm_models.py) отдельными проверками таблиц
+  `sessions` и `files`.
+- Для каждой ORM-таблицы сравнил фактическое множество имён столбцов с независимым ожидаемым
+  набором из [`sql/schema.sql`](sql/schema.sql).
+- Проверил типы столбцов, `NOT NULL`, первичные ключи, `Identity(always=True)`, часовой пояс и
+  наличие серверного значения даты по умолчанию.
+- Добавил в [`orm_models.py`](orm_models.py) отсутствовавшее ограничение
+  `CheckConstraint("size_bytes >= 0")` и проверил его выражение через метаданные.
+- Проверил цели внешних ключей `sessions.study_id -> studies.id` и
+  `files.session_id -> sessions.id` именно на соответствующих столбцах.
+
+#### Почему источник ожиданий должен быть независимым
+
+Тест метаданных сравнивает Python-описание ORM с контрактом SQL-схемы. Если ожидаемое имя просто
+скопировать из проверяемой модели, одна и та же опечатка может оказаться и в реализации, и в тесте.
+Тогда тест подтвердит их взаимное совпадение, но не соответствие реальной схеме. Поэтому точные
+наборы столбцов и цели связей в этих тестах взяты из `sql/schema.sql`.
+
+`Table.foreign_keys` содержит внешние ключи всей таблицы, а `Column.foreign_keys` — только внешние
+ключи выбранного столбца. Для проверки контракта недостаточно установить, что ссылка на
+`studies.id` где-то существует в таблице `sessions`: нужно доказать, что она назначена именно
+`study_id`.
+
+#### Ошибки и разбор
+
+| Симптом | Причина | Исправление | Общее правило |
+| --- | --- | --- | --- |
+| Все тесты проходили, но проверка внешнего ключа допускала его перенос на неверный столбец | Использовалась общая коллекция `Table.foreign_keys` | Получил конкретные `study_id_column` и `session_id_column`, затем проверил их `Column.foreign_keys` | Зелёный тест полезен только в пределах точности сформулированного утверждения |
+| Имена локальных переменных смешивали `snake_case` и часть имени класса `ORM` | Название Python-переменной повторяло стиль имени класса | Использовал `session_table` и `file_table` | Классы пишутся в `CapWords`, а локальные переменные — в `snake_case` |
+
+#### Что я понял
+
+- Проверка коллекции внешних ключей таблицы отвечает, есть ли нужная связь где-либо в этой
+  таблице.
+- Проверка `study_id_column.foreign_keys` или `session_id_column.foreign_keys` подтверждает связь
+  конкретного столбца с другой таблицей.
+- Тест может пройти и всё же содержать смысловую слепую зону, если его утверждение сформулировано
+  шире фактического контракта.
+
+#### Проверенный результат
+
+- Отдельный запуск ORM-тестов завершился результатом `4 passed`.
+- Полный набор pytest завершился результатом `15 passed`.
+- mypy не нашёл ошибок в девяти исходных файлах.
+- `pip check`, `ruff check`, `ruff format --check` и `git diff --check` завершились успешно.
+- ORM-метаданные трёх таблиц проверены без подключения к PostgreSQL; проверка фактической схемы БД
+  через соединение относится к будущим интеграционным тестам и миграциям.
+
+#### Вопросы для самопроверки
+
+1. Почему одинаковая опечатка в модели и ожидаемом результате теста может оставить тест зелёным?
+2. Чем `Table.foreign_keys` отличается от `Column.foreign_keys`?
+3. Почему наличие `relationship()` не добавляет имя связи в множество SQL-столбцов?
+4. Что именно доказывает `isinstance(column.type, BigInteger)` и чего эта проверка не доказывает?
+
+#### Официальные источники
+
+- [SQLAlchemy 2.0: работа с метаданными БД](https://docs.sqlalchemy.org/en/20/tutorial/metadata.html)
+- [SQLAlchemy 2.0: API `Column.foreign_keys`](https://docs.sqlalchemy.org/en/20/core/metadata.html#sqlalchemy.schema.Column.foreign_keys)
+- [SQLAlchemy 2.0: ограничения и внешние ключи](https://docs.sqlalchemy.org/en/20/core/constraints.html#defining-foreign-keys)
+- [SQLAlchemy 2.0: `CheckConstraint`](https://docs.sqlalchemy.org/en/20/core/constraints.html#check-constraint)

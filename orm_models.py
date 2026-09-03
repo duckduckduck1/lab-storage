@@ -1,6 +1,14 @@
 from datetime import datetime
 
-from sqlalchemy import BigInteger, DateTime, Identity, Text, func, ForeignKey
+from sqlalchemy import (
+    BigInteger,
+    DateTime,
+    Identity,
+    Text,
+    func,
+    ForeignKey,
+    CheckConstraint,
+)
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
@@ -39,6 +47,8 @@ class SessionORM(Base):
 
 class FileORM(Base):
     __tablename__ = "files"
+
+    __table_args__ = (CheckConstraint("size_bytes >= 0"),)
 
     id: Mapped[int] = mapped_column(
         BigInteger,
